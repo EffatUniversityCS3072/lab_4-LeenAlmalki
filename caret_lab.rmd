@@ -26,17 +26,37 @@ You need to split the loaded dataset into two, 80% of which we will use to train
 Hint: use createDataPartition function
 ```{r}
 
+set.seed(123)
+
+train_indices <- createDataPartition(dataset$Species, p = 0.8, list = FALSE)
+
+training_set <- dataset[train_indices, ]
+validation_set <- dataset[-train_indices, ]
+
 ```
 
 Task2: Summarize Dataset
 Use skimr library to summarize the dataset
 ```{r}
 
+
+library(skimr)
+
+summary <- skim(dataset)
+
+print(summary)
+
+
 ```
 
 Task3: split input and output
  It is the time to seperate the input attributes and  the output attributes. call the inputs attributes x and the output attribute (or class) y.
 ```{r}
+
+x<-dataset[,1:4]
+y<-dataset[ ,5]
+
+
 
 ```
 
@@ -58,7 +78,39 @@ Train 5 different algorithms using 'train' function:
 - Support Vector Machines (SVM) with a linear kernel.
 - Random Forest (RF)
 
+
+
 ```{r}
+library(caret)
+library(MASS)         
+library(rpart)         
+library(class)         
+library(e1071)        
+library(randomForest)  
+```
+
+```{r}
+# LDA 
+set.seed(45)
+fit.lda <- train(Species~., data=dataset, method="lda", metric=metric, trControl=control)
+
+# CART
+set.seed(45)
+fit.cart <- train(Species~., data=dataset, method="rpart", metric=metric, trControl=control)
+
+
+# kkN
+set.seed(45)
+fit.knn <- train(Species~., data=dataset, method="knn", metric=metric, trControl=control)
+
+# SVM
+set.seed(45)
+fit.svm <- train(Species~., data=dataset, method="svmRadial", metric=metric, trControl=control)
+
+
+# RF
+set.seed(45)
+fit.rf <- train(Species~., data=dataset, method="rf", metric=metric, trControl=control)
 
 
 ```
@@ -68,16 +120,33 @@ We now have 5 models and accuracy estimations for each. We need to compare the m
 Use resamples function to complete this task
 
 ```{r}
+# Create a list of trained models
+models_list <- list(fit.lda, fit.cart, fit.knn, fit.svm, fit.rf)
+
+# Combine models into a single object
+models_results <- resamples(models_list)
+
+# Summarize the models' performance
+summary(models_results)
 
 
 ```
 What was the most accurate model?
+LDA
 
 
 Task7: Make Prediction (Confusion Matrix)
 Now we want to get an idea of the accuracy of the best model on our validation set. Use 'predict' and confusionMatrix functions to complete this task.
 
 ```{r}
+
+# Make predictions on the validation set using the best model (Model1 - LDA)
+predictions <- predict(fit.lda, newdata = validation_set)
+
+# Create the confusion matrix
+confusion_matrix <- confusionMatrix(predictions, validation_set$Species)
+confusion_matrix
+
 
 
 ```
